@@ -1,51 +1,27 @@
 "use client";
-import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  Dialog,
-  Button,
-} from "@mui/material";
-import React, { useState } from "react";
-import usePricesExcelUploader from "../hooks/usePricesExcelUploader";
-import useProductsExcelUploader from "../hooks/useProductsExcelUploader";
+import { Box, Typography, List, ListItem, ListItemText } from "@mui/material";
+import React from "react";
 import useLoadProducts from "../hooks/useLoadProducts";
 import useLoadPrices from "../hooks/useLoadPrices"; // Importa el nuevo hook
 import "./globals.css";
+import react, {useEffect, useState} from "react";
+import UploadPricesDialog from "../components/UploadPricesDialog";
+import UploadProductsDialog from "../components/UploadProductsDialog";
 
 export default function RootLayout({ children }) {
+  const [openUplodPricesDialog, setOpenUploadPricesDialog] = useState(false);
   const [openUploadProductsDialog, setOpenUploadProductsDialog] = useState(false);
-  const [openUploadPricesDialog, setOpenUploadPricesDialog] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
 
-  const { uploadPricesExcel, isPricesUploading, pricesError } = usePricesExcelUploader();
-  const { uploadProductsExcel, isProductsUploading, productsError } = useProductsExcelUploader();
-  const { loadProducts, isLoading: isLoadingProducts, error: loadProductsError } = useLoadProducts();
-  const { loadPrices, isLoading: isLoadingPrices, error: loadPricesError } = useLoadPrices(); // Usa el hook para cargar precios
-
-  const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
-  };
-
-  const handleUpdateProductsSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedFile) {
-      await uploadProductsExcel(selectedFile);
-      setSelectedFile(null); // Clear the selected file after upload
-      setOpenUploadProductsDialog(false); // Close the dialog after upload
-    }
-  };
-
-  const handleAddPricesSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedFile) {
-      await uploadPricesExcel(selectedFile);
-      setSelectedFile(null); // Clear the selected file after upload
-      setOpenUploadPricesDialog(false); // Close the dialog after upload
-    }
-  };
+  const {
+    loadProducts,
+    isLoading: isLoadingProducts,
+    error: loadProductsError,
+  } = useLoadProducts();
+  const {
+    loadPrices,
+    isLoading: isLoadingPrices,
+    error: loadPricesError,
+  } = useLoadPrices(); // Usa el hook para cargar precios
 
   return (
     <html lang="en">
@@ -73,15 +49,15 @@ export default function RootLayout({ children }) {
               PricesApp
             </Typography>
             <List>
-              <ListItem button onClick={() => setOpenUploadProductsDialog(true)}>
-                <ListItemText primary="Subir archivo de productos" />
-              </ListItem>
-              <ListItem button onClick={() => setOpenUploadPricesDialog(true)}>
-                <ListItemText primary="Subir archivo de precios" />
-              </ListItem>
-              <ListItem button disabled={isLoadingProducts} onClick={loadProducts}>
+              <ListItem
+                button
+                disabled={isLoadingProducts}
+                onClick={loadProducts}
+              >
                 <ListItemText
-                  primary={isLoadingProducts ? "Loading..." : "Actualizar Productos"}
+                  primary={
+                    isLoadingProducts ? "Loading..." : "Actualizar Productos"
+                  }
                 />
               </ListItem>
               {loadProductsError && (
@@ -91,7 +67,9 @@ export default function RootLayout({ children }) {
               )}
               <ListItem button disabled={isLoadingPrices} onClick={loadPrices}>
                 <ListItemText
-                  primary={isLoadingPrices ? "Loading Prices..." : "Actualizar Precios"}
+                  primary={
+                    isLoadingPrices ? "Loading Prices..." : "Actualizar Precios"
+                  }
                 />
               </ListItem>
               {loadPricesError && (
@@ -99,6 +77,12 @@ export default function RootLayout({ children }) {
                   <Typography color="error">{loadPricesError}</Typography>
                 </ListItem>
               )}
+              <ListItem button onClick={() => setOpenUploadPricesDialog(true)}>
+                <ListItemText primary="Subir Precios" />
+              </ListItem>
+              <ListItem button onClick={() => setOpenUploadProductsDialog(true)}>
+                <ListItemText primary="Subir Productos" />
+              </ListItem>
             </List>
           </Box>
 
@@ -106,63 +90,11 @@ export default function RootLayout({ children }) {
             {children}
           </Box>
         </Box>
+
+        <UploadPricesDialog open={openUplodPricesDialog} onClose={() => setOpenUploadPricesDialog(false)} />
+        <UploadProductsDialog open={openUploadProductsDialog} onClose={() => setOpenUploadProductsDialog(false)} />
+
       </body>
-
-      <Dialog
-        open={openUploadProductsDialog}
-        onClose={() => setOpenUploadProductsDialog(false)}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-            flexDirection: "column",
-          }}
-        >
-          <Typography variant="h6">Subir archivo de productos</Typography>
-          <div>
-            <form onSubmit={handleUpdateProductsSubmit}>
-              <input type="file" accept=".xlsx" onChange={handleFileChange} />
-              <button type="submit" disabled={isProductsUploading}>
-                {isProductsUploading ? "Uploading..." : "Upload"}
-              </button>
-            </form>
-            {productsError && (
-              <Typography color="error">{productsError}</Typography>
-            )}
-          </div>
-        </Box>
-      </Dialog>
-
-      <Dialog
-        open={openUploadPricesDialog}
-        onClose={() => setOpenUploadPricesDialog(false)}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-            flexDirection: "column",
-          }}
-        >
-          <Typography variant="h6">Subir Archivo de precios</Typography>
-          <div>
-            <form onSubmit={handleAddPricesSubmit}>
-              <input type="file" accept=".xlsx" onChange={handleFileChange} />
-              <button type="submit" disabled={isPricesUploading}>
-                {isPricesUploading ? "Uploading..." : "Upload"}
-              </button>
-            </form>
-            {pricesError && (
-              <Typography color="error">{pricesError}</Typography>
-            )}
-          </div>
-        </Box>
-      </Dialog>
     </html>
   );
 }

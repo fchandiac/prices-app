@@ -9,7 +9,6 @@ const useLoadPrices = () => {
     const loadPrices = async () => {
         setLoading(true);
         setError(null);
-
         try {
             const response = await fetch(`${config.serverUrl}prices/load`); // Ajusta el prefijo de la API según tu configuración
             if (!response.ok) {
